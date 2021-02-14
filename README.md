@@ -1,4 +1,4 @@
-#chess-react 
+# chess-react 
 
 A player vs player Chess game using React class components.
 Testing using Jest.
