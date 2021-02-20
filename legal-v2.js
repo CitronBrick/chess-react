@@ -4,11 +4,19 @@ function findPieceAt(sq, pieceList) {
 	});
 }
 
+function toPiece(str) {
+	if(str.length != 4) {
+		console.error('argument must have 4 characters: symbol color file rank');
+	}
+	return {symbol: str.charAt(0), color: str.charAt(1), file:str.charAt(2), rank: +str.charAt(3) }
+}
+
 function makeInitialUnmovedKingRookList() {
 	var res = ['KWE1','RWA1','RWH1'].flatMap((s,i)=> {
 		var p1 = toPiece(s);
 		var p2 = {...p1};
 		p2.color =  'B';
+		p2.rank = 8;
 		return [p1,p2];
 	});
 	return res;
@@ -19,9 +27,7 @@ function isLegal(movingPiece, destination, context) {
 	var range = getPieceRange(movingPiece, context);
 	var possible = range.some((sq)=>{return sq.rank == destination.rank && sq.file == destination.file});
 
-	if(isCastlingIntended(movingPiece,destination,context) && isCastlingLegal(movingPiece,destination,context)) {
-		return performCastling();
-	}
+	
 
 	if(possible) {
 
@@ -29,11 +35,11 @@ function isLegal(movingPiece, destination, context) {
 		// remove captured piece
 		var updatedPieceList = context.pieceList.filter((piece,i)=> {
 			var captured = (piece.symbol != 'K' && piece.rank == destination.rank && piece.file == destination.file);
-			// if(captured) {
-			// 	console.log(piece);
-			// }
 			return !captured;
 		});
+
+		
+
 
 		updatedPieceList =  updatedPieceList.map((piece,i)=> {
 			if( pieceEquals(movingPiece,piece) ) { // update movedPiece
@@ -64,6 +70,13 @@ function isLegal(movingPiece, destination, context) {
 
 function applyMoveToContext(movingPiece, destination, context) {
 	var range = getPieceRange(movingPiece, context);
+
+	if(isCastlingIntended(movingPiece,destination,context) && isCastlingLegal(movingPiece,destination,context)) {
+		var res = performCastling(movingPiece,destination,context);
+		res.turn = context.turn == 'W'?'B':'W';
+		return res;
+	}
+
 	var possible = range.some((sq)=>{return sq.rank == destination.rank && sq.file == destination.file});
 
 	if(possible) {
@@ -71,7 +84,7 @@ function applyMoveToContext(movingPiece, destination, context) {
 		var updatedPieceList = applyMoveToPieceListSansVerif(movingPiece, destination, context);
 
 		var justArrivedFourthRankPawn = (movingPiece == 'P' && ((movingPiece.color == 'W' && destination.rank == 5) || (movingPiece.color == 'B' && destination.rank == 4) ));
-		var updatedContext = {pieceList: updatedPieceList, justArrivedFourthRankPawn: justArrivedFourthRankPawn};
+		var updatedContext = {pieceList: updatedPieceList, justArrivedFourthRankPawn: justArrivedFourthRankPawn, unmovedKingRookList: context.unmovedKingRookList};
 
 		var promotion = movingPiece.symbol == 'P' && (destination.rank == 8 && movingPiece.color == 'W' || destination.rank == 1 && movingPiece.color == 'B');
 		if(promotion) {
@@ -84,13 +97,21 @@ function applyMoveToContext(movingPiece, destination, context) {
 			});
 		}
 
+		// update unmovedKingRookList when king or rook has moved
 		if(['K','R'].includes(movingPiece.symbol)) {
 			updatedContext.unmovedKingRookList = context.unmovedKingRookList.filter((p)=>{
 				return !pieceEquals(movingPiece,p);
 			});
 		} 
 
-		performCastling(movingPiece, destination, context);
+
+		// remove rook from unmovedKingRookList when it has been captured
+		if(context.unmovedKingRookList) {
+			updatedContext.unmovedKingRookList = context.unmovedKingRookList.filter((kr,i)=> {
+				return updatedContext.pieceList.find((p)=>pieceEquals(p,kr));
+			});
+		}
+
 
 
 		if(isColorUnderCheck(movingPiece.color, updatedContext )) {
@@ -113,7 +134,7 @@ function applyMoveToContext(movingPiece, destination, context) {
 
 			if(isColorUnderCheck(enemy, updatedContext)) { // enemy under check
 				if(enemyHasNoMoveLeft) {
-					console.log('checkmate for ' + enemy);
+					window.alert('checkmate for ' + enemy);
 				}
 			}
 
@@ -364,59 +385,74 @@ function isCastlingLegal(movingPiece,destination,context) {
 	var enemy = movingPiece.color == 'W'?'B':'W';
 	var enemyPossibleMoves = getTotalPossibleMoves(enemy, context);
 
-	console.log(enemyPossibleMoves);
+	// console.log(enemyPossibleMoves);
 
 	var queenSide = destination.file == 'C';
+	var rookFile = queenSide?'A':'H';
 	// var code = ['C','E','G','H'].reduce((acc,lett)=>{acc[lett]=lett.charCodeAt(0);return acc;},{});
+
+	var rook = {symbol:'R', color: movingPiece.color, file:rookFile,rank:movingPiece.rank};
+
+	// cannot castle if rook has moved
+	if(!context.unmovedKingRookList.find(p=>pieceEquals(p,rook))) {
+		return false;
+	}
+
+	// cannot castle if rook does not exist
+	if(!context.pieceList.find(p=>pieceEquals(p,rook))) {
+		return false;
+	}
+
 	if(queenSide) {
-		// cannot castle queenSide if rook has moved
-		if(!context.unmovedKingRookList.find(p=>pieceEquals({symbol:'R',file:'A',rank:movingPiece.rank}))) {
-			return false;
-		}
+		
 		for(var f = 'C'.charCodeAt(0); f <= 'E'.charCodeAt(0); f++) {
 			// there is a piece between the king & the rook
 			if(f !=  'E'.charCodeAt(0)) {
-				if(findPieceAt({rank: movingPiece.rank, file: f}, context.pieceList)) {
+				if(findPieceAt({rank: movingPiece.rank, file: String.fromCharCode(f)}, context.pieceList)) {
 					return false;
 				}
 			}
-			return enemyPossibleMoves.every(function(sq) {
-				return !(sq.rank == movingPiece.rank && sq.file == String.fromCharCode(f) );
-			});
+			if(!enemyPossibleMoves.every((sq)=> !(sq.rank == movingPiece.rank && sq.file == String.fromCharCode(f) ))) {
+				return false;
+			}
 		}
+		console.log('can queenSide');
+		return true;
 	} else {
-		// cannot castle if rook has moved
-		if(!context.unmovedKingRookList.find(p=>pieceEquals({symbol:'R',file:'H',rank:movingPiece.rank}))) {
-			return false;
-		}
+		
 		for(var f = 'G'.charCodeAt(0); f >= 'E'.charCodeAt(0); f--) {
 			if(f !=  'E'.charCodeAt(0)) {
-				if(findPieceAt({rank: movingPiece.rank, file: f}, context.pieceList)) {
+				// console.log('piece blocker');
+				if(findPieceAt({rank: movingPiece.rank, file: String.fromCharCode(f)}, context.pieceList)) {
 					return false;
 				}
 			}
-			return enemyPossibleMoves.every(function(sq) {
-				return !(sq.rank == movingPiece.rank && sq.file == String.fromCharCode(f) );
-			});
+			if(!enemyPossibleMoves.every((sq)=> !(sq.rank == movingPiece.rank && sq.file == String.fromCharCode(f) ))) {
+				return false;
+			}
 		}
+		return true;
 	}
 }
 
 function performCastling(movingPiece,destination,context) {
 	var queenSide = destination.file == 'C';
+	var rook = {symbol: 'R', color : movingPiece.color, rank : movingPiece.rank, file : (queenSide?'A':'H') };
+	var unmovedKingRookList = context.unmovedKingRookList.filter(p=>(!pieceEquals(movingPiece,p) && !pieceEquals(p,rook)  )); 
+
+	// when movingPiece passed as context.pieceList[x], this map updates movingPiece itself
 	var pieceList = context.pieceList.slice().map((p)=>{
-		if(p.symbol == 'R' ) {
+		if(pieceEquals(rook,p) ) {
 			p.file = queenSide?'D':'F';
-			return p;
-		}
-		if(p.symbol == 'K') {
+		} else if(pieceEquals(movingPiece,p)) {
 			p.file = queenSide?'C':'G';
 		}
 		return p;
 	});
 
+
 	return {
-		unmovedKingRookList: context.unmovedKingRookList.filter(p=>!pieceEquals(movingPiece)),
+		unmovedKingRookList: unmovedKingRookList,
 		pieceList: pieceList
 	};
 }
@@ -585,6 +621,9 @@ function pieceEquals(p1,p2) {
 		applyMoveToContext: applyMoveToContext,
 		clonePieceList: clonePieceList,
 		makeInitialPieceList: makeInitialPieceList,
-		makeInitialUnmovedKingRookList: makeInitialUnmovedKingRookList
+		makeInitialUnmovedKingRookList: makeInitialUnmovedKingRookList,
+		isCastlingIntended: isCastlingIntended,
+		isCastlingLegal: isCastlingLegal,
+		performCastling: performCastling
 	};
 }));

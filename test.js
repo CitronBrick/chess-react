@@ -1,5 +1,5 @@
 var legal =  require('./legal-v2.js');
-
+var jest = require('jest');
 
 function toPiece(str) {
 	if(str.length != 4) {
@@ -49,6 +49,7 @@ test('white pawn promotion to queen', ()=> {
 	var c1 = {pieceList: ['KWE4','KBD7','PWA7'].map(toPiece) , promotionSymbol:'Q'};
 	var c2 = legal.applyMoveToContext(c1.pieceList[2], {rank:8,file:'A'}, c1);
 	expect(c2.pieceList).toContainEqual(toPiece('QWA8'));
+	// expect(legal.performCastling).not.toHaveBeenCalled();
 });
 
 test('pawn promotion does not result in discovered attack on own king', ()=> {
@@ -66,5 +67,63 @@ test('applyMoveToContext updates unmovedKingRookList', ()=>{
 
 
 test('isCastlingIntended ',()=>{
+	var c1 = {pieceList: ['KWE1','RWA2','KBE8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(legal.isCastlingIntended(c1.pieceList[0], {file:'C',rank:1}, c1)).toBeTruthy()
+});
 
+test('moved king cannot castle', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA2','KBE8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList().filter((p)=>p.symbol=='K'&&p.color=='B')};
+	expect(legal.isCastlingLegal(c1.pieceList[2],{file:'G',rank:8}, c1)).toBeFalsy();
+});
+
+test('moved rook cannot castle', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA2','KBE8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList().filter((p)=>p.symbol=='R'&&p.color=='B')};
+	expect(legal.isCastlingLegal(c1.pieceList[0],{file:'G',rank:8}, c1)).toBeFalsy();
+});
+
+test('king cannot castle without rook', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA2','KBE8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(legal.isCastlingLegal(c1.pieceList[0],{file:'C',rank:1}, c1)).toBeFalsy();
+});
+
+test('king cannot castle with piece in between', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA2','KBE8','BBG8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(legal.isCastlingLegal(c1.pieceList[2],{file:'G',rank:8}, c1)).toBeFalsy();
+});
+
+
+
+test('king cannot castle under check', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA2','RWH1','KBE8','BBG8','RBH8','QBE7'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(legal.isCastlingLegal(c1.pieceList[0],{file:'C',rank:1}, c1)).toBeFalsy();
+});
+
+
+test('king cannot castle with intermediary square under enemy influence', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA1','RWH1','KBE8','BBG8','RBH8','NBB3'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(legal.isCastlingLegal(c1.pieceList[0],{file:'C',rank:1}, c1)).toBeFalsy();
+});
+
+
+test('preverify if king castle king side', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA1','RWH1','KBE8','BBG8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(c1.unmovedKingRookList).toContainEqual({symbol:'R', rank:1, file:'H', color:'W'});
+	expect(legal.isCastlingLegal(c1.pieceList[0],{file:'G',rank:1}, c1)).toBeTruthy();
+});
+
+test('queenside castle', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA1','RWH1','KBE8','RBA8','BBG8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	var c2 = legal.performCastling(c1.pieceList[3], {file:'C',rank:8}, c1);
+	expect(c2.pieceList).toContainEqual(toPiece('KBC8'));
+	expect(c2.pieceList).toContainEqual(toPiece('RBD8'));
+	expect(c2.unmovedKingRookList).not.toContainEqual(toPiece('KBE8'));
+})
+
+test('only 1 king can castle at a time kingside', ()=>{
+	var c1 = {pieceList: ['KWE1','RWA1','RWH1','KBE8','BBG8','RBH8'].map(toPiece), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	var c2 = legal.performCastling(c1.pieceList[0],{file:'G',rank:1},c1);
+	expect(c2.unmovedKingRookList).not.toContainEqual({symbol:'K',color:'W'});
+	expect(c2.pieceList).toContainEqual(toPiece('KWG1'));
+	expect(c2.pieceList).toContainEqual(toPiece('RWF1'));
+	expect(c2.unmovedKingRookList.length).toBe(4);
 });

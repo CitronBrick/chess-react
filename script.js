@@ -28,9 +28,11 @@ function makeInitialUnmovedKingRookList() {
 	var res = ['KWE1','RWA1','RWH1'].flatMap((s,i)=> {
 		var p1 = toPiece(s);
 		var p2 = {...p1};
+		p2.rank = 8;
 		p2.color =  'B';
 		return [p1,p2];
 	});
+	console.log(res);
 	return res;
 }
 
@@ -55,8 +57,9 @@ class Square extends React.Component {
 
 	handleDrop(evt,context) {
 		evt.preventDefault();
+		var dataTransfer;
 		try {
-			var dataTransfer = JSON.parse(evt.dataTransfer.getData('application/json'));		
+			dataTransfer = JSON.parse(evt.dataTransfer.getData('application/json'));		
 		} catch(e) {
 			console.debug(evt.dataTransfer.getData('application/json'));
 		}
