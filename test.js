@@ -1,4 +1,5 @@
 var legal =  require('./legal-v2.js');
+var end = require('./end.js');
 var jest = require('jest');
 
 function toPiece(str) {
@@ -127,3 +128,22 @@ test('only 1 king can castle at a time kingside', ()=>{
 	expect(c2.pieceList).toContainEqual(toPiece('RWF1'));
 	expect(c2.unmovedKingRookList.length).toBe(4);
 });
+
+
+test('insufficient material draw', ()=> {
+	var c1 = {pieceList:['KWE1','QWA1','KBH8'].map(toPiece)};
+	var c2 = {pieceList:['KWE1','PBA2','KBH8'].map(toPiece)};
+	var c3 = {pieceList:['KWE1','RBA2','KBH8'].map(toPiece)};
+	var c4 = {pieceList:['KWE1','BWA2','BWA1','KBH8'].map(toPiece)};
+	var c5 = {pieceList:['KWE1','BWA2','NWA1','KBH8'].map(toPiece)};
+	[c1,c2,c3,c4,c5].forEach((c)=>{
+		expect(end.hasInsufficientMaterial(c)).toBeFalsy();
+	});
+	var c7 = {pieceList:['KWE1','NWA2','NWA1','KBH8'].map(toPiece)};
+	var c8 = {pieceList:['KWE1','NWA2','KBH8'].map(toPiece)};
+	[c7,c8].forEach((c)=>{
+		expect(end.hasInsufficientMaterial(c)).toBeTruthy();
+	});
+
+
+})
