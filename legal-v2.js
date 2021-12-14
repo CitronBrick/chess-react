@@ -78,14 +78,14 @@ function applyMoveToContext(movingPiece, destination, context) {
 	}
 
 	var possible = range.some((sq)=>{return sq.rank == destination.rank && sq.file == destination.file});
-
 	if(possible) {
 
 		var updatedPieceList = applyMoveToPieceListSansVerif(movingPiece, destination, context);
 
-		var justArrivedFourthRankPawn = (movingPiece == 'P' && ((movingPiece.color == 'W' && destination.rank == 5) || (movingPiece.color == 'B' && destination.rank == 4) ));
-		var updatedContext = {pieceList: updatedPieceList, justArrivedFourthRankPawn: justArrivedFourthRankPawn, unmovedKingRookList: context.unmovedKingRookList};
+		var justArrivedFifthRankPawn = (movingPiece.symbol == 'P' && ((movingPiece.color == 'W' && destination.rank == 5) || (movingPiece.color == 'B' && destination.rank == 4) ))?movingPiece:undefined;
+		var updatedContext = {pieceList: updatedPieceList, justArrivedFifthRankPawn: justArrivedFifthRankPawn, unmovedKingRookList: context.unmovedKingRookList};
 
+		// pawn promotion
 		var promotion = movingPiece.symbol == 'P' && (destination.rank == 8 && movingPiece.color == 'W' || destination.rank == 1 && movingPiece.color == 'B');
 		if(promotion) {
 			updatedContext.pieceList = updatedContext.pieceList.map((p)=>{
@@ -119,6 +119,9 @@ function applyMoveToContext(movingPiece, destination, context) {
 			return {};
 		} else {
 			updatedContext.turn = context.turn == 'W'?'B':'W';
+			if(context.turn == 'W') {
+				++updatedContext.moveNo;
+			}
 
 			var enemy = movingPiece.color == 'W'?'B':'W';
 			var enemyPossibleMoves = getTotalPossibleMoves(enemy, updatedContext);
@@ -136,7 +139,11 @@ function applyMoveToContext(movingPiece, destination, context) {
 				if(enemyHasNoMoveLeft) {
 					window.alert('checkmate for ' + enemy);
 				}
+			} 
+			if(hasInsufficientMaterial(updatedContext)) {
+				window.alert('game drawn due to insufficient material');
 			}
+
 
 			return updatedContext;
 		}
@@ -416,7 +423,6 @@ function isCastlingLegal(movingPiece,destination,context) {
 				return false;
 			}
 		}
-		console.log('can queenSide');
 		return true;
 	} else {
 		
@@ -534,16 +540,19 @@ function getPawnRange(pawn,context) {
 		}	
 	}
 
+
 	// en-passant
-	if(context.justArrivedFourthRankPawn && (pawn.color == 'W' && pawn.rank == 5 || pawn.color == 'B' && pawn.rank == 4)) {
+	if(context.justArrivedFifthRankPawn && (pawn.color == 'W' && pawn.rank == 5 || pawn.color == 'B' && pawn.rank == 4)) {
 		var enPassantSquares = [];
-		console.log(context.justArrivedFourthRankPawn);
-		var f = context.justArrivedFourthRankPawn.file.charCodeAt(0);
+		var f = context.justArrivedFifthRankPawn.file.charCodeAt(0);
 		if(pawn.file != 'A') {
 			enPassantSquares.push({rank: pawn.rank, file: String.fromCharCode(f-1)});
 		}
 		if(pawn.file != 'H') {
 			enPassantSquares.push({rank: pawn.rank, file: String.fromCharCode(f+1)});
+		}
+		if(enPassantSquares.length) {
+			// console.log(enPassantSquares);
 		}
 		res = res.concat(enPassantSquares);
 	}
@@ -594,15 +603,16 @@ function pieceEquals(p1,p2) {
 (function (root, factory) {
 	if (typeof define === 'function' && define.amd) {
 		// AMD. Register as an anonymous module.
-		define([], factory);
+		define(['end.js'], factory);
 	} else if (typeof module === 'object' && module.exports) {
 		// Node. Does not work with strict CommonJS, but
 		// only CommonJS-like environments that support module.exports,
 		// like Node.
-		module.exports = factory();
+		module.exports = factory(require('./end.js'));
 	} else {
 		// Browser globals (root is window)
-		root.returnExports = factory();
+		var end = {hasInsufficientMaterial};
+		root.returnExports = factory(end);
 	}
 }(this, function () {
 	//use b in some fashion.
@@ -627,3 +637,29 @@ function pieceEquals(p1,p2) {
 		performCastling: performCastling
 	};
 }));
+
+
+
+function hasInsufficientMaterial(context) {
+	var bishops = {'W':new Set(),'B':new Set()};
+	var knights = {W: [], B: []};
+	for(var i = 0 ; i < context.pieceList.length; i++) {
+		var p = context.pieceList[i];
+		// sufficient material if : Q, R, P present
+		if(['Q','R','P'].includes(p.symbol)) {
+			return false;
+		} else if(p.symbol == 'B') {
+			var squareColor = p.rank%2 == ((p.file.charCodeAt(0) - 65)%2);
+			bishops[p.color].add(squareColor);
+		} else if(p.symbol == 'N') {
+			knights[p.color].push(p);
+		}
+	}
+	// sufficient material if 2 different squareColor B are presetn
+	if( bishops.W.size >= 2 || bishops.B.size >= 2) {
+		return false;
+	}
+	// sufficient material if a B & N are present in same camp
+	var bishopAndKnight = (bishops.W.size && knights.W.length) || (bishops.B.size && knights.B.length );
+	return !bishopAndKnight;
+}

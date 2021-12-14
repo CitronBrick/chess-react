@@ -1,6 +1,7 @@
-var legal =  require('./legal-v2.js');
 var end = require('./end.js');
+var legal =  require('./legal-v2.js');
 var jest = require('jest');
+console.log(end);
 
 function toPiece(str) {
 	if(str.length != 4) {
@@ -141,7 +142,9 @@ test('insufficient material draw', ()=> {
 	});
 	var c7 = {pieceList:['KWE1','NWA2','NWA1','KBH8'].map(toPiece)};
 	var c8 = {pieceList:['KWE1','NWA2','KBH8'].map(toPiece)};
-	[c7,c8].forEach((c)=>{
+	var c9 = {pieceList:['KWE1','BWA2','KBH8'].map(toPiece)};
+	var c10 = {pieceList:['KWE1','BWA2','BWB3','KBH8'].map(toPiece)};
+	[c7,c8,c9,c10].forEach((c)=>{
 		expect(end.hasInsufficientMaterial(c)).toBeTruthy();
 	});
 

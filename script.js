@@ -7,7 +7,7 @@ function toPiece(str) {
 	return {symbol: str.charAt(0), color: str.charAt(1), file:str.charAt(2), rank: +str.charAt(3) }
 }
 
-function makeInitialPieceList() {
+/*function makeInitialPieceList() {
 	var res = [];
 	for(var i = 0; i < 8; i++) {
 		res.push({color: 'W', symbol:'P', file: String.fromCharCode(65+i), rank: 2});
@@ -22,6 +22,15 @@ function makeInitialPieceList() {
 
 	} );
 	return res; 
+}*/
+
+function makeInitialPieceList() {
+	return [
+		{color:'W',symbol:'K',file:'E',rank:8},
+		{color:'B',symbol:'K',file:'G',rank:8},
+		{color:'B',symbol:'P',file:'A',rank:2},
+		{color:'W',symbol:'N',file:'B',rank:4},
+	];
 }
 
 function makeInitialUnmovedKingRookList() {
@@ -32,7 +41,6 @@ function makeInitialUnmovedKingRookList() {
 		p2.color =  'B';
 		return [p1,p2];
 	});
-	console.log(res);
 	return res;
 }
 
@@ -98,6 +106,7 @@ class Piece extends React.Component {
 	}
 }
 
+/* This Component contains a list of choosable pieces for the next promotion */
 class PromotionPalette extends React.Component  {
 
 	constructor(props) {
@@ -127,6 +136,8 @@ class ChessBoard extends React.Component {
 			turn:'W',
 			promotionSymbol:'Q',
 			justArrivedFourthRankPawn: undefined,
+			movesSincePushCapture: 0,
+			moveNo: 0,
 			setPromotionSymbol:  (symbol)=>{
 				this.setState({promotionSymbol:symbol});
 			},
@@ -136,6 +147,7 @@ class ChessBoard extends React.Component {
 					if(movedPiece.color != state.turn) { 
 						return {pieceList: state.pieceList};
 					}
+
 
 					/*var updatedPieceList = isLegal(movedPiece, destination, context);
 
