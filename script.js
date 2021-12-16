@@ -7,7 +7,7 @@ function toPiece(str) {
 	return {symbol: str.charAt(0), color: str.charAt(1), file:str.charAt(2), rank: +str.charAt(3) }
 }
 
-/*function makeInitialPieceList() {
+function makeInitialPieceList() {
 	var res = [];
 	for(var i = 0; i < 8; i++) {
 		res.push({color: 'W', symbol:'P', file: String.fromCharCode(65+i), rank: 2});
@@ -22,16 +22,9 @@ function toPiece(str) {
 
 	} );
 	return res; 
-}*/
-
-function makeInitialPieceList() {
-	return [
-		{color:'W',symbol:'K',file:'E',rank:8},
-		{color:'B',symbol:'K',file:'G',rank:8},
-		{color:'B',symbol:'P',file:'A',rank:2},
-		{color:'W',symbol:'N',file:'B',rank:4},
-	];
 }
+
+
 
 function makeInitialUnmovedKingRookList() {
 	var res = ['KWE1','RWA1','RWH1'].flatMap((s,i)=> {
@@ -124,6 +117,21 @@ class PromotionPalette extends React.Component  {
 	}
 }
 
+function ScoreSheet(props)  {
+	return ce('div',{},
+		ce('table',{className:'scoreSheet'},
+			ce('thead',{key:'thead'},
+				ce('tr', {}, ['white','black'].map(color=>ce('th',{key:color}, color)))
+			),
+			ce('tbody', {key:'tbody'} ,Array.from({length: Math.ceil(props.scoreSheet.length/2)}, (o,i)=>
+				ce('tr',{key:'tr'+i, className:'tr'+i}, [props.scoreSheet[i*2], props.scoreSheet[i*2+1]].map((move,j)=>
+					ce('td', {key: i+''+j}, move)
+				))
+			))
+		)
+	);
+}
+
 
 
 class ChessBoard extends React.Component {
@@ -136,6 +144,7 @@ class ChessBoard extends React.Component {
 			turn:'W',
 			promotionSymbol:'Q',
 			justArrivedFourthRankPawn: undefined,
+			scoreSheet: [],
 			movesSincePushCapture: 0,
 			moveNo: 0,
 			setPromotionSymbol:  (symbol)=>{
@@ -193,10 +202,12 @@ class ChessBoard extends React.Component {
 				squareList.push(ce(Square, {key:file+rank , rank, file, color }));
 			}
 		}
+		var scoreSheet = this.state.scoreSheet;
 		return ce(GameContext.Provider, {value: this.state},  [
 			// ce(PromotionPalette,{color:'W', key:'W'}),
 			ce('div', {className:"board", key:'board'}, squareList),
-			ce(PromotionPalette,{color:'B', key:'B'})
+			ce(PromotionPalette,{color:'B', key:'B'}),
+			ce(ScoreSheet, {key: 'scoreSheet', scoreSheet: scoreSheet})
 		]);
 	}
 }

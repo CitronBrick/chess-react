@@ -67,6 +67,11 @@ function isLegal(movingPiece, destination, context) {
 }
 
 
+function genScoreSheetEntry(movingPiece, destination) {
+	return (movingPiece.symbol=='P'?'':movingPiece.symbol)+movingPiece.file.toLowerCase()+movingPiece.rank + '-' +destination.file.toLowerCase() + destination.rank;
+}
+
+
 
 function applyMoveToContext(movingPiece, destination, context) {
 	var range = getPieceRange(movingPiece, context);
@@ -82,8 +87,15 @@ function applyMoveToContext(movingPiece, destination, context) {
 
 		var updatedPieceList = applyMoveToPieceListSansVerif(movingPiece, destination, context);
 
-		var justArrivedFifthRankPawn = (movingPiece.symbol == 'P' && ((movingPiece.color == 'W' && destination.rank == 5) || (movingPiece.color == 'B' && destination.rank == 4) ))?movingPiece:undefined;
-		var updatedContext = {pieceList: updatedPieceList, justArrivedFifthRankPawn: justArrivedFifthRankPawn, unmovedKingRookList: context.unmovedKingRookList};
+		var justArrivedFourthRankPawnList  = context.justArrivedFourthRankPawnList || []; 
+		if(movingPiece.symbol == 'P' && ((movingPiece.color == 'W' && destination.rank == 5) || (movingPiece.color == 'B' && destination.rank == 4) )) {
+			justArrivedFourthRankPawnList = [movingPiece].concat(justArrivedFourthRankPawnList);
+		}
+
+		// var updatedContext = {pieceList: updatedPieceList, justArrivedFourthRankPawnList , unmovedKingRookList: context.unmovedKingRookList};
+		var updatedContext = { ...context,pieceList: updatedPieceList, justArrivedFourthRankPawnList};
+
+
 
 		// pawn promotion
 		var promotion = movingPiece.symbol == 'P' && (destination.rank == 8 && movingPiece.color == 'W' || destination.rank == 1 && movingPiece.color == 'B');
@@ -120,12 +132,20 @@ function applyMoveToContext(movingPiece, destination, context) {
 		} else {
 			updatedContext.turn = context.turn == 'W'?'B':'W';
 			if(context.turn == 'W') {
+				console.log(updatedContext.moveNo);
 				++updatedContext.moveNo;
 			}
+
+			if(updatedContext.justArrivedFourthRankPawnList.length >= 1) {
+				updatedContext.justArrivedFourthRankPawnList
+			}
+
+			updatedContext.scoreSheet = (context.scoreSheet || []).concat(genScoreSheetEntry(movingPiece, destination));
 
 			var enemy = movingPiece.color == 'W'?'B':'W';
 			var enemyPossibleMoves = getTotalPossibleMoves(enemy, updatedContext);
 			
+
 
 			// no problem
 
@@ -143,6 +163,8 @@ function applyMoveToContext(movingPiece, destination, context) {
 			if(hasInsufficientMaterial(updatedContext)) {
 				window.alert('game drawn due to insufficient material');
 			}
+
+
 
 
 			return updatedContext;
