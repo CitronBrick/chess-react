@@ -61,10 +61,10 @@ class Square extends React.Component {
 		var dataTransfer;
 		try {
 			dataTransfer = JSON.parse(evt.dataTransfer.getData('application/json'));		
+			context.move(dataTransfer.piece,{rank: this.props.rank, file: this.props.file}, context);
 		} catch(e) {
 			console.debug(evt.dataTransfer.getData('application/json'));
 		}
-		context.move(dataTransfer.piece,{rank: this.props.rank, file: this.props.file}, context);
 	}
 
 	render() {

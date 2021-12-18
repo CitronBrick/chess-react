@@ -67,8 +67,21 @@ function isLegal(movingPiece, destination, context) {
 }
 
 
-function genScoreSheetEntry(movingPiece, destination) {
-	return (movingPiece.symbol=='P'?'':movingPiece.symbol)+movingPiece.file.toLowerCase()+movingPiece.rank + '-' +destination.file.toLowerCase() + destination.rank;
+function noteScoreSheetEntry(movingPiece, destination, context) {
+
+	let res =  (movingPiece.symbol=='P'?'':movingPiece.symbol);
+	res += movingPiece.file.toLowerCase()+movingPiece.rank;
+	res += '-' +destination.file.toLowerCase() + destination.rank;
+	if(isPromotion(movingPiece,destination)) {
+		res+= `= ${context.promotionSymbol}`;
+	}
+	return res;
+}
+
+function suffixScoreSheetEntry(scoreSheet, symbol) {
+	var last = scoreSheet.pop();
+	last += symbol;
+	return scoreSheet.concat(last);
 }
 
 
@@ -98,7 +111,7 @@ function applyMoveToContext(movingPiece, destination, context) {
 
 
 		// pawn promotion
-		var promotion = movingPiece.symbol == 'P' && (destination.rank == 8 && movingPiece.color == 'W' || destination.rank == 1 && movingPiece.color == 'B');
+		var promotion = isPromotion(movingPiece,destination);
 		if(promotion) {
 			updatedContext.pieceList = updatedContext.pieceList.map((p)=>{
 				if(p.symbol == 'P' && (p.rank == 8 || p.rank == 1 )) {
@@ -137,10 +150,11 @@ function applyMoveToContext(movingPiece, destination, context) {
 			}
 
 			if(updatedContext.justArrivedFourthRankPawnList.length >= 1) {
-				updatedContext.justArrivedFourthRankPawnList
+				// updatedContext.justArrivedFourthRankPawnList
 			}
 
-			updatedContext.scoreSheet = (context.scoreSheet || []).concat(genScoreSheetEntry(movingPiece, destination));
+			// update scoresheet
+			updatedContext.scoreSheet = (context.scoreSheet || []).concat(noteScoreSheetEntry(movingPiece, destination, context));
 
 			var enemy = movingPiece.color == 'W'?'B':'W';
 			var enemyPossibleMoves = getTotalPossibleMoves(enemy, updatedContext);
@@ -156,11 +170,15 @@ function applyMoveToContext(movingPiece, destination, context) {
 			});
 
 			if(isColorUnderCheck(enemy, updatedContext)) { // enemy under check
-				if(enemyHasNoMoveLeft) {
+				console.log(updatedContext.scoreSheet);
+				updatedContext.scoreSheet = suffixScoreSheetEntry(updatedContext.scoreSheet,'+');
+				if(enemyHasNoMoveLeft) {   // checkmate for enemy
 					window.alert('checkmate for ' + enemy);
+					updatedContext.scoreSheet = suffixScoreSheetEntry(updatedContext.scoreSheet,'+');
+
 				}
 			} 
-			if(hasInsufficientMaterial(updatedContext)) {
+			if(hasInsufficientMaterial(updatedContext)) { 
 				window.alert('game drawn due to insufficient material');
 			}
 
@@ -579,6 +597,10 @@ function getPawnRange(pawn,context) {
 		res = res.concat(enPassantSquares);
 	}
 	return res;
+}
+
+function isPromotion(movingPiece,destination) {
+	return movingPiece.symbol == 'P' && (destination.rank == 8 && movingPiece.color == 'W' || destination.rank == 1 && movingPiece.color == 'B');
 }
 
 function makeInitialPieceList() {
