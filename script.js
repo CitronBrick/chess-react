@@ -92,10 +92,19 @@ class Piece extends React.Component {
 		evt.dataTransfer.setData('application/json', JSON.stringify({piece: this.props.piece}));
 	}
 
-	
+	symbolToUnicode() {
+		var pieceList = ['K','Q','R','B','N','P'];
+		// if(this.props.color == 'black') {
+			console.log(this.props.piece.symbol instanceof String);
+			console.log(typeof(this.props.piece.symbol) == 'string');
+			var index =  pieceList.indexOf(this.props.piece.symbol);
+			// return String.fromCharCode(0x2654 + index);
+		return String.fromCharCode((this.props.piece.color == 'W'?0x2654:0x265A) + index);
+
+	}
 
 	render() {
-		return ce('span', {className: 'piece', 'data-color': this.props.piece.color, draggable: true, onDragStart: this.handleDragStart}, this.props.piece.symbol);
+		return ce('span', {className: 'piece', 'data-color': this.props.piece.color, draggable: true, onDragStart: this.handleDragStart}, this.symbolToUnicode());
 	}
 }
 
@@ -118,16 +127,20 @@ class PromotionPalette extends React.Component  {
 }
 
 function ScoreSheet(props)  {
-	return ce('div',{},
-		ce('table',{className:'scoreSheet'},
-			ce('thead',{key:'thead'},
-				ce('tr', {}, ['white','black'].map(color=>ce('th',{key:color}, color)))
-			),
-			ce('tbody', {key:'tbody'} ,Array.from({length: Math.ceil(props.scoreSheet.length/2)}, (o,i)=>
-				ce('tr',{key:'tr'+i, className:'tr'+i}, [props.scoreSheet[i*2], props.scoreSheet[i*2+1]].map((move,j)=>
-					ce('td', {key: i+''+j}, move)
-				))
-			))
+	return ce(GameContext.Consumer, {}, (context)=>
+		ce('div',{},
+			ce('table',{className:'scoreSheet'}, [
+				ce('caption',{key:'caption'},'ScoreSheet'),
+				ce('thead',{key:'thead'},
+					ce('tr', {}, ['white','black'].map(color=>ce('th',{key:color}, color)))
+				),
+				ce('tbody', {key:'tbody'} ,Array.from({length: Math.ceil(props.scoreSheet.length/2)}, (o,i)=>
+					ce('tr',{key:'tr'+i, className:'tr'+i}, [props.scoreSheet[i*2], props.scoreSheet[i*2+1]].map((move,j)=>
+						ce('td', {key: i+''+j}, move)
+					))
+				)),
+				(context.result?ce('tfoot',{key:'tfoot'},ce('tr',{},ce('td',{colSpan:2},context.result.code))):undefined)
+			])
 		)
 	);
 }
@@ -145,6 +158,7 @@ class ChessBoard extends React.Component {
 			promotionSymbol:'Q',
 			justArrivedFourthRankPawn: undefined,
 			scoreSheet: [],
+			result: undefined,
 			movesSincePushCapture: 0,
 			moveNo: 0,
 			setPromotionSymbol:  (symbol)=>{

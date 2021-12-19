@@ -9,6 +9,12 @@
 	box-sizing: border-box;
 }
 
+main {
+	display: grid;
+	grid-template-columns: 1fr 100px 1fr;
+	grid-template-rows: 1fr;
+}
+
 
 .board {
 	display: grid;
@@ -47,6 +53,13 @@
 
 .promotionPalette {
 	display: flex;
+	flex-flow: column nowrap;
+	align-items: center;
+	justify-content: center;
+}
+
+.promotionPalette .piece {
+	color: dodgerblue;
 }
 
 .promotionPalette .square[data-selected="true"] {

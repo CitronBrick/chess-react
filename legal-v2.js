@@ -175,11 +175,16 @@ function applyMoveToContext(movingPiece, destination, context) {
 				if(enemyHasNoMoveLeft) {   // checkmate for enemy
 					window.alert('checkmate for ' + enemy);
 					updatedContext.scoreSheet = suffixScoreSheetEntry(updatedContext.scoreSheet,'+');
+					updatedContext.result = {code: movingPiece.color == 'W'? '1-0':'0-1', message: movingPiece.color + ' has won by checkmate'};
 
 				}
-			} 
+			} else if(enemyHasNoMoveLeft) {
+				window.alert('game drawn by stalemate');
+				updatedContext.result = {code: '0.5-0.5',message:'game drawn by stalemate'};
+			}
 			if(hasInsufficientMaterial(updatedContext)) { 
 				window.alert('game drawn due to insufficient material');
+				updatedContext.result = {code:'0.5-0.5',message:'game drawn due to insufficient material'};
 			}
 
 
@@ -516,7 +521,6 @@ function getKingRange(king, context) {
 	res.push({file: f - 1,rank: r - 1});
 	res.push({file: f - 1, rank:r });
 	res.push({file: f - 1, rank:r + 1});
-	// if(context.)
 	res = res.filter((sq,i)=>{
 
 		if( sq.rank >= 1 && sq.rank <= 8 && sq.file >= 'A'.charCodeAt(0) && sq.file <= 'H'.charCodeAt(0)) {
@@ -629,6 +633,8 @@ function includesSquare(arr, square) {
 	return arr.some((sq)=> sq.rank == square.rank && sq.file == square.file );
 }
 
+
+/* deep colone the pieceList array */
 function clonePieceList(pieceList) {
 	return pieceList.slice().map((p)=>{
 		//return {symbol: p.symbol, color: p.color, rank: p.rank, file: p.file};
