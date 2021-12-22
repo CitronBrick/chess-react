@@ -100,6 +100,8 @@ function applyMoveToContext(movingPiece, destination, context) {
 
 		var updatedPieceList = applyMoveToPieceListSansVerif(movingPiece, destination, context);
 
+
+
 		var justArrivedFourthRankPawnList  = context.justArrivedFourthRankPawnList || []; 
 		if(movingPiece.symbol == 'P' && ((movingPiece.color == 'W' && destination.rank == 5) || (movingPiece.color == 'B' && destination.rank == 4) )) {
 			justArrivedFourthRankPawnList = [movingPiece].concat(justArrivedFourthRankPawnList);
@@ -107,6 +109,12 @@ function applyMoveToContext(movingPiece, destination, context) {
 
 		// var updatedContext = {pieceList: updatedPieceList, justArrivedFourthRankPawnList , unmovedKingRookList: context.unmovedKingRookList};
 		var updatedContext = { ...context,pieceList: updatedPieceList, justArrivedFourthRankPawnList};
+
+		if(updatedContext.pieceList.length != context.pieceList.length || movingPiece.symbol == 'P') {
+			updatedContext.movesSincePushCapture = 0;
+		} else {
+			updatedContext.movesSincePushCapture+=0.5;
+		}
 
 
 
@@ -156,6 +164,11 @@ function applyMoveToContext(movingPiece, destination, context) {
 			// update scoresheet
 			updatedContext.scoreSheet = (context.scoreSheet || []).concat(noteScoreSheetEntry(movingPiece, destination, context));
 
+
+			updatedContext.positionList = context.positionList.concat({pieceList: clonePieceList(updatedContext.pieceList), unmovedKingRookList:updatedContext.unmovedKingRookList  });
+			console.log(updatedContext.positionList.length, context.positionList.length);
+
+
 			var enemy = movingPiece.color == 'W'?'B':'W';
 			var enemyPossibleMoves = getTotalPossibleMoves(enemy, updatedContext);
 			
@@ -181,10 +194,16 @@ function applyMoveToContext(movingPiece, destination, context) {
 			} else if(enemyHasNoMoveLeft) {
 				window.alert('game drawn by stalemate');
 				updatedContext.result = {code: '0.5-0.5',message:'game drawn by stalemate'};
-			}
-			if(hasInsufficientMaterial(updatedContext)) { 
+			} else if(hasInsufficientMaterial(updatedContext)) { 
 				window.alert('game drawn due to insufficient material');
 				updatedContext.result = {code:'0.5-0.5',message:'game drawn due to insufficient material'};
+			} else if(updatedContext.movesSincePushCapture >= 50) {
+				window.alert('game drawn due to 50 move rule');
+				updatedContext.result = {code:'0.5-0.5', message: 'game drawn as there was neither any capture nor a pawn move  in the last 50 moves'};
+			} else if(updatedContext.positionList.filter(position=>positionEquals(position,updatedContext.positionList[updatedContext.positionList.length-1])).length >= 5) {
+				window.alert('game drawn due to 5 fold repetition');
+				updatedContext.result = {code: '0.5-0.5', message: 'game drawn due to 5 fold repetition'};
+
 			}
 
 
@@ -203,6 +222,8 @@ function applyMoveToPieceListSansVerif(movingPiece, destination, context) {
 		var captured = (piece.symbol != 'K' && piece.rank == destination.rank && piece.file == destination.file);
 		return !captured;
 	});
+
+
 
 
 	// update movedPiece
@@ -648,6 +669,14 @@ function pieceEquals(p1,p2) {
 	return p1.color == p2.color && p1.symbol == p2.symbol && p1.file == p2.file && p1.rank == p2.rank;
 }
 
+function pieceListEquals(p1,p2) {
+	return p1.every((piece,i)=> pieceEquals(piece, p2[i]));
+}
+
+function positionEquals(p1,p2) {
+	return pieceListEquals(p1.pieceList, p2.pieceList) && pieceListEquals(p1.unmovedKingRookList, p2.unmovedKingRookList);
+}
+
 
 /*https://www.jvandemo.com/a-10-minute-primer-to-javascript-modules-module-formats-module-loaders-and-module-bundlers/ */
 (function (root, factory) {
@@ -680,6 +709,7 @@ function pieceEquals(p1,p2) {
 		applyMoveToPieceListSansVerif: applyMoveToPieceListSansVerif,
 		applyMoveToContext: applyMoveToContext,
 		clonePieceList: clonePieceList,
+		positionEquals: positionEquals,
 		makeInitialPieceList: makeInitialPieceList,
 		makeInitialUnmovedKingRookList: makeInitialUnmovedKingRookList,
 		isCastlingIntended: isCastlingIntended,

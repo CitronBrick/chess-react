@@ -94,11 +94,7 @@ class Piece extends React.Component {
 
 	symbolToUnicode() {
 		var pieceList = ['K','Q','R','B','N','P'];
-		// if(this.props.color == 'black') {
-			console.log(this.props.piece.symbol instanceof String);
-			console.log(typeof(this.props.piece.symbol) == 'string');
-			var index =  pieceList.indexOf(this.props.piece.symbol);
-			// return String.fromCharCode(0x2654 + index);
+		var index =  pieceList.indexOf(this.props.piece.symbol);
 		return String.fromCharCode((this.props.piece.color == 'W'?0x2654:0x265A) + index);
 
 	}
@@ -161,6 +157,7 @@ class ChessBoard extends React.Component {
 			result: undefined,
 			movesSincePushCapture: 0,
 			moveNo: 0,
+			positionList: [{pieceList: makeInitialPieceList(), unmovedKingRookList: makeInitialUnmovedKingRookList()}],
 			setPromotionSymbol:  (symbol)=>{
 				this.setState({promotionSymbol:symbol});
 			},
@@ -170,32 +167,6 @@ class ChessBoard extends React.Component {
 					if(movedPiece.color != state.turn) { 
 						return {pieceList: state.pieceList};
 					}
-
-
-					/*var updatedPieceList = isLegal(movedPiece, destination, context);
-
-					var justArrivedFourthRankPawn = context.justArrivedFourthRankPawn;
-					if(updatedPieceList) {
-						if(movedPiece == 'P' && ((movedPiece.color == 'W' && destination.rank == 5) || (movedPiece.color == 'B' && destination.rank == 4) ) ) {
-							justArrivedFourthRankPawn = movedPiece;	
-						} else {
-							justArrivedFourthRankPawn = undefined;
-						}
-
-					}
-					var res = {
-						pieceList: updatedPieceList,
-						justArrivedFourthRankPawn: justArrivedFourthRankPawn,
-						turn: state.turn=='W'?'B':'W'
-					};
-
-
-					if(updatedPieceList) {
-						return res;
-					} else {
-						return {};
-					}*/
-
 
 					return applyMoveToContext(movedPiece, destination, context);
 					

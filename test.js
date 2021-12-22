@@ -149,4 +149,23 @@ test('insufficient material draw', ()=> {
 	});
 
 
-})
+});
+
+test('pieceListEquals',()=>{
+	var c1 = {pieceList:legal.makeInitialPieceList() ,unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	var c2 = {pieceList:legal.makeInitialPieceList(), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(legal.pieceListEquals(c1.pieceList, c2.pieceList)).toBeTruthy();
+});
+
+
+test('positionEquals',()=>{
+	var c1 = {pieceList:legal.makeInitialPieceList() ,unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	var c2 = {pieceList:legal.makeInitialPieceList(), unmovedKingRookList: legal.makeInitialUnmovedKingRookList()};
+	expect(legal.positionEquals(c1,c2)).toBeTruthy();
+	var c3 = {pieceList: ['KWE1','QWE6','KBE8'].map(toPiece), unmovedKingRookList:[]};
+	var c4 = {pieceList: ['KWE1','QWE6','KBE8'].map(toPiece), unmovedKingRookList:[]};
+	var c5 = {pieceList: ['KWE1','QWE6','KBE7'].map(toPiece), unmovedKingRookList:[]};
+	expect(legal.positionEquals(c3,c4)).toBeTruthy();
+	expect(legal.positionEquals(c3,c5)).toBeFalsy();
+
+});

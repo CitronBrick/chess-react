@@ -8,7 +8,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "npx jest test.js"
+    "test": "npx jest test.js -t positionEquals"
   },
   "author": "",
   "license": "ISC"
