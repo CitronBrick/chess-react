@@ -68,6 +68,19 @@ function isLegal(movingPiece, destination, context) {
 
 
 function noteScoreSheetEntry(movingPiece, destination, context) {
+	console.log(movingPiece);
+	console.log(destination);
+	if(isCastlingIntended(movingPiece,destination,context)) {
+		console.log('isCastlingIntended');
+		if(destination.file == 'G') {
+			return 'O-O';
+		} else if(destination.file == 'C') {
+			return 'O-O-O';
+		} else {
+			console.error('impossible error case. trying to note illegal castling');
+		}
+		return;
+	}
 
 	let res =  (movingPiece.symbol=='P'?'':movingPiece.symbol);
 	res += movingPiece.file.toLowerCase()+movingPiece.rank;
@@ -75,6 +88,7 @@ function noteScoreSheetEntry(movingPiece, destination, context) {
 	if(isPromotion(movingPiece,destination)) {
 		res+= `= ${context.promotionSymbol}`;
 	}
+
 	return res;
 }
 
@@ -92,6 +106,7 @@ function applyMoveToContext(movingPiece, destination, context) {
 	if(isCastlingIntended(movingPiece,destination,context) && isCastlingLegal(movingPiece,destination,context)) {
 		var res = performCastling(movingPiece,destination,context);
 		res.turn = context.turn == 'W'?'B':'W';
+		res.scoreSheet = context.scoreSheet.concat(noteScoreSheetEntry(movingPiece,destination,context));
 		return res;
 	}
 
@@ -153,7 +168,6 @@ function applyMoveToContext(movingPiece, destination, context) {
 		} else {
 			updatedContext.turn = context.turn == 'W'?'B':'W';
 			if(context.turn == 'W') {
-				console.log(updatedContext.moveNo);
 				++updatedContext.moveNo;
 			}
 
