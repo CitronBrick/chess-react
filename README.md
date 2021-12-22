@@ -1,7 +1,7 @@
 # chess-react 
 
 A player vs player Chess game using React class components.
-Testing using Jest.
+Tested using Jest.
 
 To run: Open index.html in your browser
 
@@ -17,6 +17,5 @@ This is to help unit-testing.
 
 - En-passant
 - Draw conditions
-	- Stalemate
-	- 3 move repetition
-	- 50 move rule
+	- 3 fold repetition
+	- 5 fold repetition
