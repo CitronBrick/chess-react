@@ -73,6 +73,10 @@ main {
 	height: 360px;
 }
 
+.promotionPalette .title {
+	margin-bottom: 5px;
+}
+
 .promotionPalette .piece {
 	color: dodgerblue;
 }

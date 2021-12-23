@@ -112,11 +112,12 @@ class PromotionPalette extends React.Component  {
 	}
 
 	render() {
+		var title = ce('div',{key:'title',className:'title'},'Promote to');
 		return ce(GameContext.Consumer, {}, (context)=>{
-			return ce('div', {className:"promotionPalette"}, ['Q','R','B','N'].map((symbol)=>{
+			return ce('div', {className:"promotionPalette"}, [title].concat(['Q','R','B','N'].map((symbol)=>{
 				var piece = ce(Piece,{key:symbol, piece: {symbol:symbol,color: this.props.color}});
 				return ce('div', {className:'square',key:symbol, "data-selected": context.promotionSymbol == symbol, onClick: ()=>{ context.setPromotionSymbol(symbol) } }, piece);
-			}));
+			})));
 
 		} )
 	}
