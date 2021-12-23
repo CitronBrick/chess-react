@@ -147,9 +147,11 @@ class ChessBoard extends React.Component {
 
 	constructor(props) {
 		super(props);
+		var initialPieceList =makeInitialPieceList();
+		var initialUnmovedKingRookList = makeInitialUnmovedKingRookList();
 		this.state = {
-			pieceList: makeInitialPieceList(),
-			unmovedKingRookList: makeInitialUnmovedKingRookList(),
+			pieceList: initialPieceList,
+			unmovedKingRookList: initialUnmovedKingRookList,
 			turn:'W',
 			promotionSymbol:'Q',
 			justArrivedFourthRankPawn: undefined,
@@ -157,7 +159,7 @@ class ChessBoard extends React.Component {
 			result: undefined,
 			movesSincePushCapture: 0,
 			moveNo: 0,
-			positionList: [{pieceList: makeInitialPieceList(), unmovedKingRookList: makeInitialUnmovedKingRookList()}],
+			positionList: [{pieceList: initialPieceList, unmovedKingRookList: initialUnmovedKingRookList, turn:'W'}],
 			setPromotionSymbol:  (symbol)=>{
 				this.setState({promotionSymbol:symbol});
 			},

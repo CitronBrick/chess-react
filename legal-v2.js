@@ -688,7 +688,7 @@ function pieceListEquals(p1,p2) {
 }
 
 function positionEquals(p1,p2) {
-	return pieceListEquals(p1.pieceList, p2.pieceList) && pieceListEquals(p1.unmovedKingRookList, p2.unmovedKingRookList);
+	return pieceListEquals(p1.pieceList, p2.pieceList) && pieceListEquals(p1.unmovedKingRookList, p2.unmovedKingRookList) && p1.turn == p2.turn;
 }
 
 
