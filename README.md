@@ -1,7 +1,7 @@
 # chess-react 
 
 A player vs player Chess game using React class components.
-Tested using Jest.
+Tested using Jest. [Play online](https://citronbrick.github.io/chess-react/)
 
 To run: Open index.html in your browser
 
